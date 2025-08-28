@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Carpeta Fiscal Electrónica</title>
+  <link rel="icon" href="data:," />
+  <style>
+    :root{
+      --azul:#002D62;
+      --azul-borde:#1A3E80;
+      --azul-osc:#001a40;
+      --blanco:#ffffff;
+      --gris:#f5f7fb;
+      --gris2:#eef2fa;
+      --texto:#0b1630;
+      --muted:#5b6b85;
+      --ok:#1fa77a;
+      --peligro:#d64a4a;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family:system-ui,Segoe UI,Roboto,Inter,Helvetica,Arial,sans-serif;
+      background:var(--blanco); color:var(--texto);
+    }
+    .wrap{max-width:1200px;margin:0 auto;padding:28px}
+
+    /* Header */
+    header{
+      background:var(--azul); color:var(--blanco);
+      padding:14px 18px; border-radius:12px;
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+    }
+    .title{display:flex;align-items:center;gap:12px}
+    .logo{width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#2c64cc,#6daadf)}
+    h1{margin:0;font-size:20px}
+
+    /* Botones */
+    .btn{
+      appearance:none; border:1px solid var(--azul-borde); border-radius:10px;
+      padding:10px 14px; font-weight:700; cursor:pointer; transition:.2s;
+    }
+    .btn.primary{background:var(--azul); color:var(--blanco)}
+    .btn.primary:hover{background:var(--azul-osc)}
+    .btn.ghost{background:var(--blanco); color:var(--azul)}
+    .btn.ghost:hover{background:var(--gris)}
+    .btn.alt{background:#0b4f8f; color:#fff; border-color:#0b4f8f}
+    .btn.alt:hover{background:#093e70}
+
+    /* Tabs */
+    .tabs{display:flex;gap:8px;margin:14px 0}
+    .tab{
+      flex:1;padding:12px;text-align:center;border-radius:10px;
+      border:1px solid var(--azul-borde);cursor:pointer;font-weight:700;
+      background:var(--gris); color:var(--azul);
+    }
+    .tab.active{background:var(--azul); color:#fff}
+
+    /* Paneles */
+    .panel{
+      background:var(--blanco); border:1px solid var(--azul-borde);
+      border-radius:12px; padding:16px; margin-bottom:18px;
+      box-shadow:0 3px 12px rgba(0,0,0,.06);
+    }
+    .panel h2{margin:0 0 12px 0;color:var(--azul)}
+    label{font-size:12px; display:block; margin-bottom:6px; color:var(--muted)}
+    input[type="text"],input[type="number"],input[type="date"],input[type="file"],select{
+      width:100%; padding:10px; border:1px solid var(--azul-borde);
+      border-radius:10px; background:var(--gris2); color:var(--texto)
+    }
+    .help{font-size:12px;color:#6b7c96}
+
+    /* Layouts */
+    .form{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+    .form .full{grid-column:1/-1}
+    .options-row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
+    .options-row .field{display:flex;flex-direction:column;gap:6px;min-width:220px;flex:1}
+
+    /* Tarjetas */
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+    .card{position:relative;background:#fff;border:1px solid var(--azul-borde);border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.06);padding-bottom:72px} /* espacio para botones */
+    .thumb{width:100%;aspect-ratio:3/4;background:#fff;display:flex;align-items:center;justify-content:center;padding:18px}
+    .thumb img{width:100%;height:100%;object-fit:cover;border:1px solid #d9e4fb;border-radius:8px}
+    .card-body{padding:10px;display:flex;justify-content:space-between;align-items:center;color:var(--azul)}
+    .num{font-weight:900;word-break:break-word;font-size:clamp(18px,2.4vw,26px);letter-spacing:.2px}
+    .badge{font-size:11px;padding:6px 8px;border-radius:999px;background:var(--azul);color:#fff;white-space:nowrap}
+    .actions-overlay{
+      position:absolute;left:8px;right:8px;bottom:8px;
+      display:flex;gap:8px;flex-wrap:wrap; /* ✅ wrap para que no se corten */
+    }
+    .mini-btn{flex:1;border:1px solid var(--azul-borde);background:var(--gris);color:var(--azul);padding:8px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer}
+    .mini-btn:hover{background:#e9effa}
+
+    .empty{padding:20px;text-align:center;border:1px dashed var(--azul-borde);border-radius:12px;background:#fff;color:var(--azul)}
+
+    /* Visor PDF */
+    #visor{margin-top:16px}
+    #visor[hidden]{display:none}
+    .visor-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+    .visor-frame{width:100%;height:70vh;border:1px solid var(--azul-borde);border-radius:12px;background:#fff}
+
+    /* Modales */
+    dialog{border:none;border-radius:16px;padding:0;overflow:hidden;background:#fff;color:var(--texto);box-shadow:0 18px 60px rgba(0,0,0,.35)}
+    .modal-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--azul-borde);background:var(--gris)}
+    .modal-body{padding:16px}
+    .modal-actions{display:flex;gap:10px;padding:14px 16px;border-top:1px solid var(--azul-borde);background:var(--gris)}
+    .parts-list{display:flex;flex-direction:column;gap:8px}
+    .part-item{display:grid;grid-template-columns:40px 1fr 160px 32px;align-items:center;gap:8px;padding:8px;border:1px solid var(--azul-borde);border-radius:10px;background:#fff}
+    .part-actions{display:flex;gap:6px}
+    .icon-btn{appearance:none;border:1px solid var(--azul-borde);background:var(--gris);color:var(--azul);padding:6px 8px;border-radius:8px;cursor:pointer}
+
+    /* Toast */
+    .toast{position:fixed;right:16px;bottom:16px;background:var(--azul);border:1px solid var(--azul-borde);color:#fff;padding:12px 14px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.3);display:none}
+    .toast.show{display:block;animation:fade 3.2s ease both}
+    @keyframes fade{0%{opacity:0;transform:translateY(8px)}10%,90%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(8px)}}
+
+    /* Opcional: en pantallas muy estrechas, soltar los botones debajo */
+    @media (max-width: 420px){
+      .actions-overlay{position:static;margin:8px}
+      .card{padding-bottom:12px}
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="title">
+        <div class="logo" aria-hidden="true"></div>
+        <h1>Carpeta Fiscal Electrónica</h1>
+      </div>
+      <!-- 🔻 Se eliminaron los botones superiores duplicados (Ver/Registrar) -->
+    </header>
+
+    <div class="tabs" role="tablist" aria-label="Secciones">
+      <button class="tab active" id="tab-ver" role="tab" aria-selected="true" aria-controls="panel-ver">Ver</button>
+      <button class="tab" id="tab-ingresar" role="tab" aria-selected="false" aria-controls="panel-ingresar">Registrar</button>
+    </div>
+
+    <section class="panel" id="panel-ver" role="tabpanel" aria-labelledby="tab-ver">
+      <h2>Buscar Carpeta</h2>
+      <div class="form" style="grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:10px">
+        <div>
+          <label for="buscarAnio">Año</label>
+          <input type="number" id="buscarAnio" placeholder="2025" min="1990" max="2099" />
+        </div>
+        <div>
+          <label for="buscarNumCaso">Número de caso</label>
+          <input type="text" id="buscarNumCaso" placeholder="60" />
+        </div>
+        <div>
+          <label for="buscarIncidente">Incidente</label>
+          <input type="text" id="buscarIncidente" placeholder="0" />
+        </div>
+        <div>
+          <label for="maxPorTomo">Máx. folios por Tomo</label>
+          <input type="number" id="maxPorTomo" value="200" min="50" max="500" />
+        </div>
+        <div class="full options-row">
+          <div class="field">
+            <label for="buscarNumeroCompleto">Búsqueda directa por número completo (opcional)</label>
+            <input type="text" id="buscarNumeroCompleto" placeholder="5060155055-2025-60-0" />
+          </div>
+          <button type="button" class="btn primary" id="btnBuscar">Buscar</button>
+          <button type="button" class="btn ghost" id="btnLimpiarBusqueda">Limpiar</button>
+        </div>
+      </div>
+
+      <div id="lista" class="grid"></div>
+      <div id="estado-pida-buscar" class="empty">Ingrese criterios y presione <b>Buscar</b> para mostrar la carpeta.</div>
+      <div id="estado-no-encontrado" class="empty" hidden>No se encontraron carpetas con los criterios indicados.</div>
+
+      <div id="visor" hidden>
+        <div class="visor-head">
+          <div id="visor-titulo" style="font-weight:800;color:var(--azul)"></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn ghost" id="visor-traza" type="button">Trazabilidad</button>
+            <button class="btn ghost" id="visor-abrir" type="button">Abrir en pestaña</button>
+            <button class="btn primary" id="visor-descargar" type="button">Descargar PDF</button>
+            <button class="btn alt" id="visor-cerrar" type="button">Cerrar visor</button>
+          </div>
+        </div>
+        <iframe id="visor-frame" class="visor-frame"></iframe>
+      </div>
+    </section>
+
+    <section class="panel" id="panel-ingresar" role="tabpanel" aria-labelledby="tab-ingresar" hidden>
+      <h2>Registrar Carpeta</h2>
+      <form id="form-carpeta" class="form" autocomplete="off">
+        <div>
+          <label for="codFiscalia">Código de Fiscalía (preestablecido)</label>
+          <input type="text" id="codFiscalia" value="5060155055" readonly />
+        </div>
+        <div>
+          <label for="anio">Año</label>
+          <input type="number" id="anio" placeholder="2025" min="1990" max="2099" required />
+        </div>
+        <div>
+          <label for="numCaso">Número de caso</label>
+          <input type="text" id="numCaso" placeholder="60" required />
+        </div>
+        <div>
+          <label for="incidente">Incidente</label>
+          <input type="text" id="incidente" placeholder="0" required />
+        </div>
+        <div class="full">
+          <label for="numero">Número completo de Carpeta (autogenerado)</label>
+          <input type="text" id="numero" readonly />
+        </div>
+        <div>
+          <label for="fecha">Fecha de ingreso</label>
+          <input type="date" id="fecha" />
+        </div>
+        <div>
+          <label for="archivo">PDF inicial de la Carpeta</label>
+          <input type="file" id="archivo" accept="application/pdf" required />
+        </div>
+        <div class="full help">El número se compone como: <b>código-año-n°caso-incidente</b>. Ej.: <code>5060155055-2025-60-0</code>.</div>
+        <div class="full" style="display:flex;gap:10px;align-items:center">
+          <button type="submit" class="btn primary">Guardar Carpeta</button>
+          <button type="button" class="btn ghost" id="btn-demo">Usar PDF de ejemplo</button>
+        </div>
+      </form>
+    </section>
+  </div>
+
+  <dialog id="modal-organizar">
+    <div class="modal-head">
+      <div style="font-weight:800;color:var(--azul)" id="org-numero">Organizar documentos</div>
+      <button class="btn ghost" id="org-cerrar" type="button">Cerrar</button>
+    </div>
+    <div class="modal-body">
+      <div class="help" style="margin-bottom:10px">Reordena con las flechas, edita la descripción o elimina documentos antes de consolidar.</div>
+      <div id="org-list" class="parts-list"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn primary" id="org-guardar" type="button">Guardar cambios</button>
+    </div>
+  </dialog>
+
+  <dialog id="modal-agregar">
+    <div class="modal-head">
+      <div style="font-weight:800;color:var(--azul)" id="agregar-titulo">Agregar documento</div>
+      <button class="btn ghost" id="agregar-cerrar" type="button">Cerrar</button>
+    </div>
+    <form id="form-agregar">
+      <div class="modal-body" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div style="grid-column:1/-1" class="help">Completa los datos. La fecha/hora se obtiene automáticamente (hora de Internet, con respaldo local).</div>
+        <div>
+          <label>Nombre del documento</label>
+          <input type="text" id="agregar-nombre" placeholder="Oficio, Informe, Resolución..." required />
+        </div>
+        <div>
+          <label>Nº de documento</label>
+          <input type="text" id="agregar-numero" placeholder="Oficio N.° 123-2025" />
+        </div>
+        <div>
+          <label>Parte que presenta</label>
+          <select id="agregar-parte">
+            <option value="Fiscalía">Fiscalía</option>
+            <option value="Defensa">Defensa</option>
+            <option value="Policía">Policía</option>
+            <option value="Perito">Perito</option>
+            <option value="Víctima">Víctima</option>
+            <option value="Imputado">Imputado</option>
+            <option value="Otro">Otro (especificar)</option>
+          </select>
+        </div>
+        <div>
+          <label>Si elegiste “Otro”, especifica</label>
+          <input type="text" id="agregar-parte-otro" placeholder="Procuraduría Pública" disabled />
+        </div>
+        <div style="grid-column:1/-1">
+          <label>PDF</label>
+          <input type="file" id="agregar-file" accept="application/pdf" required />
+        </div>
+        <div style="grid-column:1/-1">
+          <label>Descripción (opcional)</label>
+          <input type="text" id="agregar-desc" placeholder="Breve descripción del contenido" />
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn primary" type="submit">Guardar documento</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="modal-traza">
+    <div class="modal-head">
+      <div style="font-weight:800;color:var(--azul)" id="traza-numero">Trazabilidad</div>
+      <button class="btn ghost" id="traza-cerrar" type="button">Cerrar</button>
+    </div>
+    <div class="modal-body">
+      <div class="help" style="margin-bottom:10px">Listado de actuaciones/documentales ingresadas en la carpeta.</div>
+      <div id="traza-list" class="parts-list"></div>
+    </div>
+  </dialog>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+  /* ====== IndexedDB ====== */
+  const DB_NAME='carpetaFiscalDB';
+  const STORE='carpetas';
+  const DB_VERSION=5;
+
+  function openDB(){
+    return new Promise((resolve,reject)=>{
+      const req=indexedDB.open(DB_NAME,DB_VERSION);
+      req.onupgradeneeded=(e)=>{
+        const db=e.target.result;
+        let os = db.objectStoreNames.contains(STORE)
+          ? req.transaction.objectStore(STORE)
+          : db.createObjectStore(STORE,{keyPath:'numero'});
+        if(os && !os.indexNames.contains('fechaIngreso')){
+          os.createIndex('fechaIngreso','fechaIngreso',{unique:false});
+        }
+      };
+      req.onsuccess=()=>resolve(req.result);
+      req.onerror=()=>reject(req.error);
+    });
+  }
+  async function dbPut(record){
+    const db=await openDB();
+    return new Promise((resolve,reject)=>{
+      const tx=db.transaction(STORE,'readwrite');
+      tx.objectStore(STORE).put(record);
+      tx.oncomplete=()=>resolve(true);
+      tx.onerror=()=>reject(tx.error);
+    });
+  }
+  async function dbGet(numero){
+    const db=await openDB();
+    return new Promise((resolve,reject)=>{
+      const tx=db.transaction(STORE,'readonly');
+      const req=tx.objectStore(STORE).get(numero);
+      req.onsuccess=()=>resolve(req.result||null);
+      req.onerror=()=>reject(req.error);
+    });
+  }
+  async function dbSearch({anio,numCaso,incidente,numeroCompleto}){
+    const db=await openDB();
+    return new Promise((resolve,reject)=>{
+      const tx=db.transaction(STORE,'readonly');
+      const req=tx.objectStore(STORE).getAll();
+      req.onsuccess=()=>{
+        const all=req.result||[];
+        let filtered=all;
+        if(numeroCompleto){
+          filtered=all.filter(x=>(x.numero||'').toLowerCase()===numeroCompleto.toLowerCase());
+        }else{
+          filtered=all.filter(x=>{
+            const parts=(x.numero||'').split('-');
+            const okAnio=!anio || parts[1]===String(anio);
+            const okCaso=!numCaso || parts[2]===String(numCaso);
+            const okInc=!incidente || parts[3]===String(incidente);
+            return okAnio && okCaso && okInc;
+          });
+        }
+        resolve(filtered);
+      };
+      req.onerror=()=>reject(req.error);
+    });
+  }
+
+  /* ====== Helpers UI ====== */
+  const $=(s,p=document)=>p.querySelector(s);
+  function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3200);}
+  function switchTab(which){
+    const isVer=which==='ver';
+    $('#panel-ver').hidden=!isVer;
+    $('#panel-ingresar').hidden=isVer;
+    $('#tab-ver').classList.toggle('active',isVer);
+    $('#tab-ingresar').classList.toggle('active',!isVer);
+    $('#tab-ver').setAttribute('aria-selected',isVer);
+    $('#tab-ingresar').setAttribute('aria-selected',!isVer);
+    if(isVer){
+      $('#lista').innerHTML='';
+      $('#estado-pida-buscar').hidden=false;
+      $('#estado-no-encontrado').hidden=true;
+      $('#visor').hidden=true; $('#visor-frame').src='';
+    }else{
+      $('#visor').hidden=true; $('#visor-frame').src='';
+    }
+  }
+
+  /* ====== Carátula para miniatura ====== */
+  function fakeCover(numero, fecha){
+    const canvas=document.createElement('canvas'); canvas.width=600; canvas.height=800;
+    const ctx=canvas.getContext('2d');
+    ctx.fillStyle='#fff'; ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.strokeStyle='#0c244a'; ctx.lineWidth=4; ctx.strokeRect(40,40,520,720);
+    ctx.fillStyle='#0c244a'; ctx.font='700 48px Arial'; ctx.textAlign='center';
+    ctx.fillText('CASO FISCAL',300,180);
+    ctx.font='600 22px Arial'; ctx.textAlign='left';
+    const t=`N° ${numero}`, x=60, y=260, maxW=480, lh=26;
+    const words=t.split(' '); let line='', lines=0;
+    for(let n=0;n<words.length;n++){
+      const test=line+words[n]+' ';
+      if(ctx.measureText(test).width>maxW && n>0){ ctx.fillText(line.trim(),x,y+lines*lh); line=words[n]+' '; lines++; }
+      else{ line=test; }
+    }
+    ctx.fillText(line.trim(),x,y+lines*lh);
+    if(fecha){ ctx.font='600 20px Arial'; ctx.fillText('Fecha: '+ new Date(fecha).toLocaleDateString(),60,320+(lines+1)*lh); }
+    return canvas.toDataURL('image/png');
+  }
+
+  /* ====== Hora de internet ====== */
+  async function getInternetTimeISO(){
+    try{
+      const res=await fetch('https://worldtimeapi.org/api/timezone/America/Lima',{cache:'no-store'});
+      if(!res.ok) throw new Error('time http');
+      const data=await res.json();
+      return { iso:data.datetime, fuente:'internet' };
+    }catch{ return { iso:new Date().toISOString(), fuente:'local' }; }
+  }
+
+  /* ====== Números a letras (MAYÚSCULAS) ====== */
+  function numeroALetras(num){
+    const u=['','UNO','DOS','TRES','CUATRO','CINCO','SEIS','SIETE','OCHO','NUEVE'];
+    const teen={10:'DIEZ',11:'ONCE',12:'DOCE',13:'TRECE',14:'CATORCE',15:'QUINCE',16:'DIECISÉIS',17:'DIECISIETE',18:'DIECIOCHO',19:'DIECINUEVE'};
+    const d=['','DIEZ','VEINTE','TREINTA','CUARENTA','CINCUENTA','SESENTA','SETENTA','OCHENTA','NOVENTA'];
+    const c=['','CIEN','DOSCIENTOS','TRESCIENTOS','CUATROCIENTOS','QUINIENTOS','SEISCIENTOS','SETECIENTOS','OCHOCIENTOS'];
+    if(num===0) return 'CERO';
+    if(num<10) return u[num];
+    if(num<20) return teen[num];
+    if(num<100){ const t=Math.floor(num/10), r=num%10; return d[t] + (r? (t===2?'I':' Y ') + u[r] : ''); }
+    if(num<1000){ const t=Math.floor(num/100), r=num%100; if(num===100) return 'CIEN'; return c[t] + (r? ' ' + numeroALetras(r):''); }
+    if(num<10000){ const t=Math.floor(num/1000), r=num%1000; return (t===1?'MIL':u[t]+' MIL') + (r? ' ' + numeroALetras(r):''); }
+    return String(num);
+  }
+
+  /* ====== Foliatura top-right ====== */
+  function drawFolioTopRight(page, folio, fontBold, fontItalic){
+    const { rgb }=PDFLib;
+    const { width:w, height:h }=page.getSize();
+    const margin=22, sizeNum=12, sizeLit=10, gap=2;
+    const textNum=String(folio);
+    const textLit='-'+numeroALetras(folio)+'-';
+    const widthNum=fontBold.widthOfTextAtSize(textNum,sizeNum);
+    const widthLit=fontItalic.widthOfTextAtSize(textLit,sizeLit);
+    const blockW=Math.max(widthNum,widthLit);
+    const blockH=sizeNum+gap+sizeLit;
+    const x=Math.max(margin, w - margin - blockW);
+    const yNum=Math.max(margin + blockH, h - margin);
+    const yLit=yNum - sizeNum - gap;
+    page.drawText(textNum, {x:x+(blockW-widthNum), y:yNum, size:sizeNum, font:fontBold, color:rgb(0,0,0)});
+    page.drawText(textLit, {x:x+(blockW-widthLit), y:yLit, size:sizeLit, font:fontItalic, color:rgb(0,0,0)});
+  }
+
+  /* ====== Separador de TOMO ====== */
+  function addTomoSeparator(doc, tomoIndex, fontBold, fontRegular){
+    const page=doc.addPage();
+    const {width:w, height:h}=page.getSize();
+    const title=`TOMO ${tomoIndex}`;
+    const sub='— Separador de tomo —';
+    const sizeTitle=36, sizeSub=14;
+    const tw=fontBold.widthOfTextAtSize(title,sizeTitle);
+    const sw=fontRegular.widthOfTextAtSize(sub,sizeSub);
+    page.drawText(title, {x:(w-tw)/2, y:h/2+10, size:sizeTitle, font:fontBold, color:PDFLib.rgb(0,0,0)});
+    page.drawText(sub, {x:(w-sw)/2, y:h/2-20, size:sizeSub, font:fontRegular, color:PDFLib.rgb(0,0,0)});
+  }
+
+  /* ====== Consolidado ÚNICO con tomos ====== */
+  async function buildSingleConsolidatedWithTomos(blobs, maxPerTomo=200){
+    const { PDFDocument, StandardFonts, degrees, PageSizes }=PDFLib;
+    const out=await PDFDocument.create();
+    const fontBold=await out.embedFont(StandardFonts.HelveticaBold);
+    const fontItalic=await out.embedFont(StandardFonts.HelveticaOblique);
+    const fontRegular=await out.embedFont(StandardFonts.Helvetica);
+    const [A4_WIDTH, A4_HEIGHT] = [PageSizes.A4[0], PageSizes.A4[1]];
+
+    let folio=1, currentTomo=1, countInTomo=0;
+
+    for(const blob of blobs){
+      const bytes=await blob.arrayBuffer();
+      const src=await PDFDocument.load(bytes);
+      const srcPages = src.getPages();
+      for (const srcPage of srcPages) {
+        if(countInTomo===maxPerTomo){
+          currentTomo++; countInTomo=0;
+          addTomoSeparator(out, currentTomo, fontBold, fontRegular);
+        }
+
+        const { width, height } = srcPage.getSize();
+        const newPage = out.addPage(PageSizes.A4);
+        let embeddedPage;
+
+        if (width > height) { // Página horizontal
+          const tempPage = out.createPage([A4_HEIGHT, A4_WIDTH]);
+          tempPage.drawPage(srcPage, {
+            x: 0,
+            y: A4_HEIGHT,
+            rotate: degrees(-90),
+            scale: Math.min(A4_WIDTH / width, A4_HEIGHT / height),
+          });
+          embeddedPage = await out.embedPage(tempPage);
+          newPage.drawPage(embeddedPage, {
+            x: (A4_WIDTH - embeddedPage.width) / 2,
+            y: (A4_HEIGHT - embeddedPage.height) / 2,
+          });
+        } else { // Página vertical
+          const scale = Math.min(A4_WIDTH / width, A4_HEIGHT / height);
+          embeddedPage = await out.embedPage(srcPage);
+          newPage.drawPage(embeddedPage, {
+            x: (A4_WIDTH - embeddedPage.width * scale) / 2,
+            y: (A4_HEIGHT - embeddedPage.height * scale) / 2,
+            width: embeddedPage.width * scale,
+            height: embeddedPage.height * scale,
+          });
+        }
+
+        countInTomo++;
+        drawFolioTopRight(newPage, folio, fontBold, fontItalic);
+        folio++;
+      }
+    }
+    const bytes=await out.save({updateMetadata:true});
+    return new Blob([bytes], {type:'application/pdf'});
+  }
+
+  /* ====== Migración compatibilidad ====== */
+  function migrateRecord(rec){
+    if(rec.pdfParts && Array.isArray(rec.pdfParts)) return rec;
+    if(rec.pdfBlob){
+      rec.pdfParts=[{name: rec.nombreArchivo || 'Documento.pdf', blob: rec.pdfBlob, desc:'', fechaIngresoDoc: new Date().toISOString(), fuenteHora:'local', numeroDoc:'', parte:'Fiscalía'}];
+      delete rec.pdfBlob; delete rec.nombreArchivo;
+      dbPut(rec);
+    }
+    return rec;
+  }
+
+  /* ====== Modales Agregar / Organizar / Trazabilidad ====== */
+  let addNumero=null;
+  function openAddModal(numero){
+    addNumero=numero;
+    $('#agregar-titulo').textContent=`Agregar documento — ${numero}`;
+    $('#agregar-nombre').value=''; $('#agregar-numero').value='';
+    $('#agregar-parte').value='Fiscalía'; $('#agregar-parte-otro').value=''; $('#agregar-parte-otro').disabled=true;
+    $('#agregar-file').value=''; $('#agregar-desc').value='';
+    $('#modal-agregar').showModal();
+  }
+  $('#agregar-cerrar').addEventListener('click',()=>$('#modal-agregar').close());
+  $('#agregar-parte').addEventListener('change',(e)=>{ const show=e.target.value==='Otro'; $('#agregar-parte-otro').disabled=!show; });
+  document.getElementById('form-agregar').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const nombre=$('#agregar-nombre').value.trim();
+    const numeroDoc=$('#agregar-numero').value.trim();
+    const parteSel=$('#agregar-parte').value;
+    const parteOtro=$('#agregar-parte-otro').value.trim();
+    const parte=(parteSel==='Otro' ? (parteOtro || 'Otro') : parteSel);
+    const file=$('#agregar-file').files[0];
+    const desc=$('#agregar-desc').value.trim();
+    if(!nombre){ toast('Ingresa el nombre del documento.'); return; }
+    if(!file || file.type!=='application/pdf'){ toast('Adjunta un PDF válido.'); return; }
+
+    const rec=await dbGet(addNumero); if(!rec){ toast('No se encontró la carpeta'); return; }
+    migrateRecord(rec);
+    const time=await getInternetTimeISO();
+    rec.pdfParts=rec.pdfParts||[];
+    rec.pdfParts.push({ name:nombre, numeroDoc, parte, desc, blob:file, fechaIngresoDoc: time.iso, fuenteHora: time.fuente });
+    await dbPut(rec);
+    $('#modal-agregar').close();
+    toast('Documento agregado con trazabilidad.');
+    searchAndDisplay();
+  });
+
+  let orgRecord=null;
+  async function openOrganizer(numero){
+    const rec=await dbGet(numero); if(!rec) return toast('No se encontró la carpeta');
+    migrateRecord(rec); orgRecord=rec;
+    $('#org-numero').textContent=`Organizar — ${numero}`;
+    renderOrgList(); $('#modal-organizar').showModal();
+  }
+  function renderOrgList(){
+    const cont=$('#org-list'); cont.innerHTML='';
+    orgRecord.pdfParts.forEach((p,idx)=>{
+      const row=document.createElement('div'); row.className='part-item';
+      const fecha=p.fechaIngresoDoc ? new Date(p.fechaIngresoDoc).toLocaleString() : '';
+      const meta=[ fecha?`Ingreso: ${fecha} (${p.fuenteHora||'local'})`:'' , p.numeroDoc?`Nº: ${p.numeroDoc}`:'', p.parte?`Parte: ${p.parte}`:'' ].filter(Boolean).join(' • ');
+      row.innerHTML=`
+        <div style="opacity:.8">${idx+1}</div>
+        <div class="name-col">
+          <input type="text" value="${p.name||''}" class="name" />
+          <div class="meta" style="font-size:11px;opacity:.85;color:#4a5878">${meta}</div>
+        </div>
+        <input type="text" value="${p.desc||''}" placeholder="Descripción (opcional)" class="desc" />
+        <div class="part-actions">
+          <button class="icon-btn up" type="button">↑</button>
+          <button class="icon-btn down" type="button">↓</button>
+          <button class="icon-btn del" type="button" title="Eliminar">✕</button>
+        </div>`;
+      row.querySelector('.up').addEventListener('click',()=>{ if(idx>0){ const t=orgRecord.pdfParts[idx-1]; orgRecord.pdfParts[idx-1]=orgRecord.pdfParts[idx]; orgRecord.pdfParts[idx]=t; renderOrgList(); }});
+      row.querySelector('.down').addEventListener('click',()=>{ if(idx<orgRecord.pdfParts.length-1){ const t=orgRecord.pdfParts[idx+1]; orgRecord.pdfParts[idx+1]=orgRecord.pdfParts[idx]; orgRecord.pdfParts[idx]=t; renderOrgList(); }});
+      row.querySelector('.del').addEventListener('click',()=>{ orgRecord.pdfParts.splice(idx,1); renderOrgList(); });
+      row.querySelector('.name').addEventListener('input',(e)=>{ orgRecord.pdfParts[idx].name=e.target.value; });
+      row.querySelector('.desc').addEventListener('input',(e)=>{ orgRecord.pdfParts[idx].desc=e.target.value; });
+      cont.appendChild(row);
+    });
+  }
+  document.getElementById('org-cerrar').addEventListener('click',()=>$('#modal-organizar').close());
+  document.getElementById('org-guardar').addEventListener('click',async ()=>{ await dbPut(orgRecord); $('#modal-organizar').close(); toast('Cambios guardados'); searchAndDisplay(); });
+
+  async function openTrace(numero){
+    const rec=await dbGet(numero); if(!rec) return toast('No se encontró la carpeta');
+    migrateRecord(rec);
+    $('#traza-numero').textContent=`Trazabilidad — ${numero}`;
+    const cont=$('#traza-list'); cont.innerHTML='';
+    (rec.pdfParts||[]).forEach((p,idx)=>{
+      const fecha=p.fechaIngresoDoc ? new Date(p.fechaIngresoDoc).toLocaleString() : '';
+      const item=document.createElement('div'); item.className='part-item';
+      item.innerHTML=`
+        <div style="opacity:.8">${idx+1}</div>
+        <div>
+          <div style="font-weight:800;color:var(--azul)">${p.name || '(sin nombre)'} ${p.numeroDoc ? '— ' + p.numeroDoc : ''}</div>
+          <div style="font-size:12px;opacity:.9">Fecha: ${fecha} (${p.fuenteHora||'local'}) • Parte: ${p.parte||'-'} ${p.desc? '• '+p.desc:''}</div>
+        </div>
+        <div></div>
+        <div class="part-actions">
+          <button class="icon-btn ver" type="button">Ver</button>
+          <button class="icon-btn downl" type="button">Desc.</button>
+        </div>`;
+      item.querySelector('.ver').addEventListener('click',()=>{
+        const url=URL.createObjectURL(p.blob);
+        window.open(url,'_blank','noopener');
+        setTimeout(()=>URL.revokeObjectURL(url),60000);
+      });
+      item.querySelector('.downl').addEventListener('click',()=>{
+        const url=URL.createObjectURL(p.blob);
+        const a=document.createElement('a'); a.href=url; a.download=`${numero}-${(p.numeroDoc||p.name||'doc')}.pdf`; a.click();
+        setTimeout(()=>URL.revokeObjectURL(url),1500);
+      });
+      cont.appendChild(item);
+    });
+    $('#modal-traza').showModal();
+  }
+  document.getElementById('traza-cerrar').addEventListener('click',()=>$('#modal-traza').close());
+
+  /* ====== Número completo autogenerado ====== */
+  function buildNumero(){
+    const cod=$('#codFiscalia').value.trim();
+    const anio=$('#anio').value.trim();
+    const caso=$('#numCaso').value.trim();
+    const inc=$('#incidente').value.trim();
+    const parts=[cod,anio,caso,inc].filter(Boolean);
+    const full=parts.join('-');
+    $('#numero').value=full;
+    return full;
+  }
+  ;['anio','numCaso','incidente'].forEach(id=>{ document.getElementById(id).addEventListener('input', buildNumero); });
+
+  /* ====== Registrar carpeta ====== */
+  document.getElementById('form-carpeta').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const numero = buildNumero();
+    const fecha = document.getElementById('fecha').value || new Date().toISOString().slice(0, 10);
+    const file = document.getElementById('archivo').files[0];
+
+    if (!numero || numero.split('-').length < 4) {
+      toast('Complete código, año, caso e incidente.');
+      return;
+    }
+    if (!file || file.type !== 'application/pdf') {
+      toast('Adjunte un PDF válido.');
+      return;
+    }
+
+    try {
+      const defName = file.name.replace(/\.pdf$/i, '').trim();
+      const nombreIni = prompt('Nombre del documento inicial:', defName) || defName || file.name;
+      const numeroDocIni = prompt('Nº de documento (opcional):', '') || '';
+      const parteIni = prompt('Parte que presenta (Fiscalía/Defensa/Policía/Perito/Víctima/Imputado/Otro):', 'Fiscalía') || 'Fiscalía';
+      const parteOtro = (parteIni === 'Otro' ? prompt('Si elegiste “Otro”, especifica', '') : '') || '';
+      const parte = (parteIni === 'Otro' ? (parteOtro || 'Otro') : parteIni);
+
+      const time = await getInternetTimeISO();
+      const record = {
+        numero,
+        fechaIngreso: fecha,
+        pdfParts: [{
+          name: nombreIni,
+          numeroDoc: numeroDocIni,
+          parte: parte,
+          desc: '',
+          blob: file,
+          fechaIngresoDoc: time.iso,
+          fuenteHora: time.fuente
+        }]
+      };
+
+      await dbPut(record);
+      toast('Carpeta guardada correctamente.');
+      switchTab('ver');
+      e.target.reset();
+      $('#codFiscalia').value = '5060155055';
+      $('#anio').valueAsNumber = new Date().getFullYear();
+      $('#incidente').value = '0';
+      buildNumero();
+    } catch(err) {
+      console.error(err);
+      toast('Ocurrió un error al guardar: ' + err.message);
+    }
+  });
+
+  /* ====== Búsqueda ====== */
+  document.getElementById('btnBuscar').addEventListener('click', searchAndDisplay);
+  document.getElementById('btnLimpiarBusqueda').addEventListener('click', ()=>{
+    $('#buscarAnio').value=''; $('#buscarNumCaso').value=''; $('#buscarIncidente').value=''; $('#buscarNumeroCompleto').value='';
+    $('#lista').innerHTML=''; $('#estado-pida-buscar').hidden=false; $('#estado-no-encontrado').hidden=true;
+    $('#visor').hidden=true; $('#visor-frame').src='';
+  });
+
+  async function searchAndDisplay(){
+    const anio=$('#buscarAnio').value.trim();
+    const numCaso=$('#buscarNumCaso').value.trim();
+    const incidente=$('#buscarIncidente').value.trim();
+    const numeroCompleto=$('#buscarNumeroCompleto').value.trim();
+
+    const lista=$('#lista');
+    const pedir=$('#estado-pida-buscar');
+    const noenc=$('#estado-no-encontrado');
+
+    lista.innerHTML='';
+    pedir.hidden=true; noenc.hidden=true;
+
+    if(!anio && !numCaso && !incidente && !numeroCompleto){
+      pedir.hidden=false; return;
+    }
+
+    const items=await dbSearch({anio, numCaso, incidente, numeroCompleto});
+    if(!items.length){ noenc.hidden=false; return; }
+
+    items.sort((a,b)=> (b.fechaIngreso||'').localeCompare(a.fechaIngreso||''));    
+    for(const it of items){
+      migrateRecord(it);
+      const parts=(it.numero||'').split('-'); // [cod, anio, caso, inc]
+      const anioShow = parts[1] || '';
+      const casoShow = parts[2] || '';
+      const label = `CASO: ${casoShow}-${anioShow}`;
+
+      const card=document.createElement('article'); card.className='card';
+      const thumb=document.createElement('div'); thumb.className='thumb';
+      const img=document.createElement('img'); img.alt=`Carátula ${it.numero}`; img.loading='lazy'; img.src=fakeCover(it.numero,it.fechaIngreso); thumb.appendChild(img);
+      const body=document.createElement('div'); body.className='card-body';
+      const num=document.createElement('div'); num.className='num'; num.textContent=label;
+      const count=it.pdfParts?.length||0;
+      const badge=document.createElement('div'); badge.className='badge'; badge.textContent=count? `${count} doc(s)` : '0 doc';
+      body.append(num,badge);
+
+      const actions=document.createElement('div'); actions.className='actions-overlay';
+      const btnAdd=document.createElement('button'); btnAdd.type='button'; btnAdd.className='mini-btn'; btnAdd.textContent='➕ Agregar doc.';
+      const btnView=document.createElement('button'); btnView.type='button'; btnView.className='mini-btn'; btnView.textContent='👁️ Ver consolidado';
+      const btnOrg=document.createElement('button'); btnOrg.type='button'; btnOrg.className='mini-btn'; btnOrg.textContent='↕️ Organizar';
+      const btnTrace=document.createElement('button'); btnTrace.type='button'; btnTrace.className='mini-btn'; btnTrace.textContent='🔎 Trazabilidad';
+      actions.append(btnAdd, btnView, btnOrg, btnTrace);
+
+      btnAdd.addEventListener('click', (ev)=>{ ev.stopPropagation(); openAddModal(it.numero); });
+      btnView.addEventListener('click', async (ev)=>{ ev.stopPropagation(); await openConsolidatedSingle(it.numero); });
+      btnOrg.addEventListener('click', async (ev)=>{ ev.stopPropagation(); await openOrganizer(it.numero); });
+      btnTrace.addEventListener('click', async (ev)=>{ ev.stopPropagation(); await openTrace(it.numero); });
+
+      card.append(thumb, body, actions);
+      lista.appendChild(card);
+    }
+  }
+
+  /* ====== Visor consolidado único ====== */
+  let visorBlobUrl=null, visorBlob=null, visorNumero=null;
+  async function openConsolidatedSingle(numero){
+    const rec=await dbGet(numero); if(!rec) return toast('No se encontró la carpeta');
+    migrateRecord(rec);
+    if(!rec.pdfParts || !rec.pdfParts.length){ toast('La carpeta no tiene documentos.'); return; }
+    const blobs=rec.pdfParts.map(p=>p.blob);
+    const max=parseInt($('#maxPorTomo').value||'200',10) || 200;
+    const merged=await buildSingleConsolidatedWithTomos(blobs, max);
+    if(visorBlobUrl) URL.revokeObjectURL(visorBlobUrl);
+    visorBlob=merged; visorBlobUrl=URL.createObjectURL(merged); visorNumero=numero;
+    $('#visor-frame').src=visorBlobUrl;
+    $('#visor-titulo').textContent=`Carpeta ${numero} — Consolidado único (tomo cada ${max} folios)`;
+    $('#visor').hidden=false;
+  }
+  document.getElementById('visor-cerrar').addEventListener('click',()=>{ $('#visor').hidden=true; $('#visor-frame').src=''; if(visorBlobUrl){ URL.revokeObjectURL(visorBlobUrl); visorBlobUrl=null; } });
+  document.getElementById('visor-abrir').addEventListener('click',()=>{ if(!visorBlobUrl) return; window.open(visorBlobUrl,'_blank','noopener'); });
+  document.getElementById('visor-descargar').addEventListener('click',()=>{ if(!visorBlob) return; const a=document.createElement('a'); const url=URL.createObjectURL(visorBlob); a.href=url; a.download=`${visorNumero}-Consolidado.pdf`; a.click(); setTimeout(()=>URL.revokeObjectURL(url),1500); });
+  document.getElementById('visor-traza').addEventListener('click', async ()=>{ if(!visorNumero) return; await openTrace(visorNumero); });
+
+  /* ====== Navegación (segura si se cambian elementos) ====== */
+  const btnVerEl = document.getElementById('btnVer');
+  const btnIngEl = document.getElementById('btnIngresar');
+  if(btnVerEl) btnVerEl.addEventListener('click', ()=>switchTab('ver'));
+  if(btnIngEl) btnIngEl.addEventListener('click', ()=>switchTab('ingresar'));
+  document.getElementById('tab-ver').addEventListener('click', ()=>switchTab('ver'));
+  document.getElementById('tab-ingresar').addEventListener('click', ()=>switchTab('ingresar'));
+
+  /* ====== DEMO para registro ====== */
+  document.getElementById('btn-demo').addEventListener('click', async ()=>{
+    try{
+      const demoUrl='https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf';
+      const resp=await fetch(demoUrl); const blob=await resp.blob();
+      const dt=new DataTransfer(); const file=new File([blob],'Ejemplo.pdf',{type:'application/pdf'});
+      dt.items.add(file); document.getElementById('archivo').files=dt.files;
+      if(!$('#anio').value) $('#anio').valueAsNumber=new Date().getFullYear();
+      if(!$('#numCaso').value) $('#numCaso').value='60';
+      if(!$('#incidente').value) $('#incidente').value='0';
+      buildNumero(); toast('PDF de ejemplo listo para guardar.');
+    }catch(err){ console.error(err); toast('No se pudo cargar el PDF de ejemplo.'); }
+  });
+
+  /* ====== Init ====== */
+  (async function init(){
+    $('#codFiscalia').value='5060155055';
+    $('#anio').valueAsNumber=new Date().getFullYear();
+    $('#incidente').value='0';
+    buildNumero();
+  })();
+  </script>
+</body>
+</html>
